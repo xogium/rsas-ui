@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSAS Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: #eee;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        header {
+            text-align: center;
+            margin: 20px;
+        }
+        .stats, .mounts {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .mount {
+            margin-top: 10px;
+            padding: 10px;
+            border-top: 1px solid #555;
+            transition: background-color 0.3s ease; /* Smooth transition for background color */
+        }
+        .mount.selected {
+            background-color: #007BFF; /* Highlight selected stream */
+            color: white;
+        }
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        /* Accessibility notice */
+        .accessibility-note {
+            background: #444;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            width: 100%;
+            font-size: 14px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>RSAS Status Dashboard</h1>
+    </header>
+    <div class="stats">
+        <h2>Total Listeners: <span id="total-listeners">0</span></h2>
+        <h2>Total Sources: <span id="total-sources">0</span></h2>
+    </div>
+    <div class="mounts" id="mounts-container">
+        <!-- Dynamic content will go here -->
+    </div>
+    <!-- Accessibility note for users about keyboard input -->
+    <div class="accessibility-note">
+        This interface uses keyboard input. Use arrow keys to select streams. Left/Right to play/stop.
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
