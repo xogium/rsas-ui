@@ -1,6 +1,7 @@
 let audioPlayer = null; // A single reusable audio player instance
 let currentButton = null; // Track the active play/stop button
 let lastDataHash = ""; // Store the hash of the last data received to detect changes
+let lastMountPressed = null;
 let currentIndex = 0; // Track the currently selected stream index
 
 // Fetch RSAS data and update the UI
@@ -15,7 +16,7 @@ async function fetchRSASData() {
         // Hash the current data to detect changes
         const dataHash = hashData(data);
 
-        if (dataHash !== lastDataHash) {
+        if (dataHash != lastDataHash) {
             // Only update the UI if the data has changed
             lastDataHash = dataHash;
             updateGlobalStats(data);
@@ -25,7 +26,7 @@ async function fetchRSASData() {
         console.error("Failed to fetch RSAS data:", error);
     } finally {
         // Poll the server again after processing
-        setTimeout(fetchRSASData, 1000); // Poll every second
+        setTimeout(fetchRSASData, 2000); // Poll every second
     }
 }
 
@@ -58,7 +59,7 @@ function updateMounts(mounts) {
     container.innerHTML = ""; // Clear existing mounts
 
     if (!mounts || Object.keys(mounts).length === 0) {
-        container.innerHTML = `<p>No active mounts available.</p>`;
+        container.innerHTML = `<p role="alert">No active mounts available.</p>`;
         return;
     }
 
@@ -77,9 +78,12 @@ function updateMounts(mounts) {
         const button = document.createElement("button");
         if (audioPlayer && audioPlayer.src === streamUrl && !audioPlayer.paused) {
             button.textContent = "⏹️ Stop"; // Changed to the stop emoji
+            button.setAttribute("aria-label", `Stop ${mount.replace("/", "")}`)
             currentButton = button; // Keep reference to the active button
         } else {
             button.textContent = "▶ Play";
+            button.setAttribute("aria-label", `Play ${mount.replace("/", "")}`)
+            currentButton = button; // Keep reference to the active button
         }
         button.onclick = () => togglePlayback(mount, button);
 
@@ -91,29 +95,45 @@ function updateMounts(mounts) {
         `;
         mountDiv.appendChild(button);
         container.appendChild(mountDiv);
-
         // Attach the URL as a data attribute for easier access later
         mountDiv.dataset.url = streamUrl;
     });
+
+    // if lastMountPressed, focus the button for that mount name
+    if (lastMountPressed) {
+        const mounts = document.querySelectorAll(".mount");
+        mounts.forEach((mount, index) => {
+            if (mount.textContent.includes(lastMountPressed)) {
+                console.log(`found ${mount}`)
+                currentIndex = index;
+                mount.classList.add("active");
+                // focus its button
+                mount.querySelector("button").focus();
+            }
+        });
+    }
 }
 
 // Toggle between playing and stopping the stream
 function togglePlayback(mount, button) {
+    lastMountPressed = mount;
     const streamUrl = `https://radio.xogium.me${mount}`;
 
     if (audioPlayer && audioPlayer.src === streamUrl && !audioPlayer.paused) {
         // Stop the current stream
         stopPlayback();
+        button.setAttribute("aria-label", `Play ${mount.replace("/", "")}`)
         button.textContent = "▶ Play"; // Reset button text
+
     } else {
         // Play the selected stream
         stopPlayback(); // Stop any currently playing stream
-        startPlayback(streamUrl, button);
+        startPlayback(streamUrl, button, mount);
     }
 }
 
 // Start playing the selected stream
-function startPlayback(src, button) {
+function startPlayback(src, button, mount) {
     if (!src) {
         console.error("No valid stream URL provided.");
         return;
@@ -124,6 +144,7 @@ function startPlayback(src, button) {
     }
     audioPlayer.play().catch((err) => console.error("Playback error:", err)); // Catch errors if autoplay is blocked
     button.textContent = "⏹️ Stop"; // Update button to indicate it's playing
+    button.setAttribute("aria-label", `Stop ${mount.replace("/", "")}`)
     currentButton = button;
 }
 
@@ -137,7 +158,9 @@ function stopPlayback() {
     // Reset the previous button, if any
     if (currentButton) {
         currentButton.textContent = "▶ Play";
+        currentButton.getAttribute("aria-label").replace("stop", "Play")
         currentButton = null;
+
     }
 }
 
@@ -145,7 +168,12 @@ function stopPlayback() {
 function resetPlayback() {
     if (currentButton) {
         currentButton.textContent = "▶ Play";
+        currentButton.getAttribute("aria-label").replace("stop", "Play")
         currentButton = null;
+        if (lastMountPressed) {
+
+        }
+
     }
 }
 
@@ -166,7 +194,7 @@ function handleKeyNavigation(event) {
         case "ArrowRight":
             // Play the currently selected stream
             const playUrl = mounts[currentIndex].dataset.url;
-            startPlayback(playUrl, mounts[currentIndex].querySelector('button')); // Pass the button along
+            startPlayback(playUrl, mounts[currentIndex].querySelector('button'), mounts[currentIndex]); // Pass the button along
             break;
         case "ArrowLeft":
             // Stop playback
